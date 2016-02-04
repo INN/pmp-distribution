@@ -189,6 +189,8 @@ function pmp_save_dist_options($post_id) {
 			$collection_guid = $_POST[$meta_key];
 
 		if (!empty($collection_guid)) {
+			$existing_guids = array();
+
 			if (!isset($pmp_doc->links->collection)) {
 				$pmp_doc->links->collection = array();
 			} else {
@@ -206,7 +208,45 @@ function pmp_save_dist_options($post_id) {
 					);
 				}
 			}
+		} else {
+			// Unset the values that belong to us
+			$our_collection_guids = (array) get_post_meta($post_id, $meta_key . '_distribution', true);
+			$new_collections = array();
+			foreach ($pmp_doc->links->collection as $collection) {
+				if (!in_array(SDKWrapper::guid4href($collection->href), $our_collection_guids)) {
+					array_push($new_collections, $collection);
+				}
+			}
+			$pmp_doc->links->collection = $new_collections;
 		}
+		update_post_meta($post_id, $meta_key . '_distribution', $collection_guid);
 	}
 	$pmp_doc->save();
 }
+
+/**
+ * Make sure distributor-set collections are preserved when pushing to the PMP
+ *
+ * @since 0.0.1
+ */
+function pmp_dist_preserve_distributor_collection($doc, $previous_collection, $post) {
+	$current_guids = array_map(function($item) { return SDKWrapper::guid4href($item->href); }, $doc->links->collection);
+	$previous_guids = array_map(function($item) { return SDKWrapper::guid4href($item->href); }, $previous_collection);
+	$difference = array_diff($previous_guids, $current_guids);
+
+	if (!empty($difference)) {
+		$sdk = new SDKWrapper();
+		foreach ($difference as $idx => $guid_to_check) {
+			$collection = $sdk->fetchDoc($guid_to_check);
+
+			foreach ($doc->links->distributor as $distributor) {
+				if ($distributor->href == $collection->links->owner[0]->href) {
+					$doc->links->collection[] = $previous_collection[$idx];
+				}
+			}
+		}
+	}
+
+	return $doc;
+}
+add_filter('pmp_set_doc_collection', 'pmp_dist_preserve_distributor_collection', 10, 3);
