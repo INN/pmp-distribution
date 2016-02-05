@@ -69,7 +69,7 @@ function pmp_distributor_options_meta_box_for_owner() {
 	global $post;
 	wp_nonce_field('pmp_dist_meta_box', 'pmp_dist_meta_box_nonce'); ?>
 	<div id="pmp-dist-options" class="async-menu-container">
-		<p>Set distribution group(s) for this post</p>
+		<p>Set distributor(s) for this post</p>
 		<div
 			id="pmp-distributor-for-post"
 			class="async-menu-option pmp-dist-option-for-post"
@@ -250,3 +250,15 @@ function pmp_dist_preserve_distributor_collection($doc, $previous_collection, $p
 	return $doc;
 }
 add_filter('pmp_set_doc_collection', 'pmp_dist_preserve_distributor_collection', 10, 3);
+
+/**
+ * Add a field to the PMP search page to allow searching by distributor GUID
+ *
+ * @since 0.0.1
+ */
+function pmp_dist_search_after_primary() { ?>
+	<!-- Distributor search -->
+	<label for="distributor">Search by distributor GUID:</label>
+	<input type="text" name="distributor" placeholder="Search by distributor GUID"></input><?php
+}
+add_action('pmp_search_after_primary', 'pmp_dist_search_after_primary');
