@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Public Media Platform Distribution Extension
- * Plugin URI: https://nerds.inn.org
+ * Plugin URI: https://github.com/INN/pmp-distribution
  * Description: An extension for managing distribution of content from several organizations via the PMP
  * Author: INN nerds
  * Version: latest
