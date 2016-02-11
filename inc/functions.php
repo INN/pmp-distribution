@@ -47,7 +47,7 @@ function pmp_distributor_options_meta_box_for_distributor() {
 		<?php } ?>
 	</div>
 	<div id="pmp-publish-actions">
-		<?php submit_button('Update dist. options', 'primary', 'pmp_save_dist_options', false, $attrs); ?>
+		<?php submit_button( 'Update dist. options', 'primary', 'pmp_save_dist_options', false, $attrs); ?>
 	</div>
 	<?php
 	/*
@@ -67,6 +67,13 @@ function pmp_distributor_options_meta_box_for_distributor() {
  */
 function pmp_distributor_options_meta_box_for_owner() {
 	global $post;
+
+	$sdk = new SDKWrapper();
+	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
+	$pmp_doc = $sdk->query2json('fetchDoc', $pmp_guid);
+	$existing_distributors = $pmp_doc['items'][0]['links']['distributor'];
+	$action =  ( empty( $existing_distributors ) ) ? 'Set' : 'Update';
+
 	wp_nonce_field('pmp_dist_meta_box', 'pmp_dist_meta_box_nonce'); ?>
 	<div id="pmp-dist-options" class="async-menu-container">
 		<p>Set distributor(s) for this post</p>
@@ -78,7 +85,7 @@ function pmp_distributor_options_meta_box_for_owner() {
 		</div>
 	</div>
 	<div id="pmp-publish-actions">
-		<?php submit_button('Update dist. options', 'primary', 'pmp_save_distributors_for_post', false, $attrs); ?>
+		<?php submit_button( $action . ' dist. options', 'primary', 'pmp_save_distributors_for_post', false, $attrs); ?>
 	</div><?php
 }
 
@@ -156,7 +163,7 @@ function pmp_save_distributors_for_post($post_id) {
 	$pmp_doc->links->distributor = array();
 
 	foreach ((array) $_POST['pmp_distributor_override'] as $distributor_guid) {
-		if (!in_array($distributor_guid, $existing_guids)) {
+		if (!in_array($distributor_guid, (array) $existing_guids)) {
 			$pmp_doc->links->distributor[] = (object) array(
 				'href' => $sdk->href4guid($distributor_guid)
 			);

@@ -100,6 +100,11 @@ function _pmp_dist_option_select_distributor_for_post($post) {
 		'limit' => 9999
 	));
 
+	$pmp_things['items'] = array_filter($pmp_things['items'], function($item) {
+		if ( $item['attributes']['guid'] !== pmp_get_my_guid() )
+			return $item;
+	});
+
 	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
 	$pmp_doc = $sdk->query2json('fetchDoc', $pmp_guid);
 
@@ -114,17 +119,28 @@ function _pmp_dist_option_select_distributor_for_post($post) {
 
 	$existing_guids = array_map(function($item) { return $item->guid; }, $existing_options);
 
+	$settings = get_option('pmp_dist_settings');
+	$default_guids = $settings['pmp_dist_default_distributor'];
+
 	if (!empty($pmp_things['items'])) {
 		foreach ($pmp_things['items'] as $thing) {
-			if (in_array($thing['attributes']['guid'], $existing_guids))
+			$thing_guid = $thing['attributes']['guid'];
+			if (in_array($thing_guid, $existing_guids) || ( empty($existing_guids) && in_array($thing_guid, $default_guids) ) ) {
 				$selected = true;
-			else
+			} else {
 				$selected = false;
+			}
+
+			if ( empty($existing_guids) && in_array($thing_guid, $default_guids) ) {
+				$title = $thing['attributes']['title'] . ' (default)';
+			} else {
+				$title = $thing['attributes']['title'];
+			}
 
 			$option = array(
 				'selected' => $selected,
 				'guid' => $thing['attributes']['guid'],
-				'title' => $thing['attributes']['title']
+				'title' => $title
 			);
 			$options[] = $option;
 		}

@@ -28,6 +28,12 @@ add_action('admin_enqueue_scripts', 'pmp_dist_register_assets', 10);
  */
 function pmp_dist_enqueue_assets() {
 	$screen = get_current_screen();
+
+	if ( isset( $_GET['page'] ) && $_GET['page'] == 'pmp-manage-dist-settings' ) {
+		wp_enqueue_script('pmp-chosen');
+		wp_enqueue_style('pmp-chosen');
+	}
+
 	if ($screen->base == 'post' && $screen->post_type == 'post') {
 		wp_enqueue_script('pmp-dist');
 		wp_enqueue_style('pmp-dist');
